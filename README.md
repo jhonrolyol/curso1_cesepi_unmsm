@@ -27,19 +27,18 @@
 
 > **Objetivos**
 
->> Identificar el porcentaje de población ocupada y desocupada nacional (año 2024) .
+>> Identificar el porcentaje de población ocupada y desocupada nacional.
 
->> Identificar el porcentaje de población ocupada y desocupada según rangos de edades (año 2023).
+>> Identificar el porcentaje de población ocupada y desocupada según rangos de edades.
 
->> Identificar el porcentaje de población ocupada y desocupada según área geográfica (urbana y rural) (año 2024).
+>> Identificar el porcentaje de población ocupada y desocupada según área geográfica.
 
->> Identificar el porcentaje de población ocupada y desocupada según región (año 2023).
+>> Identificar el porcentaje de población ocupada y desocupada según región.
 
->> Identificar el porcentaje de población ocupada y desocupada según región y sexo (año 2024).
+>> Identificar el porcentaje de población ocupada y desocupada según región y sexo.
 
-Presentar un gráfico para cada uno de los resultados. 
+>> Finalmente, presentar un gráfico para cada uno de los resultados. 
 
 - :file_folder: Archivos de la tarea 1 (:point_right:[Click aquí](https://github.com/jhonrolyol/curso1_cesepi_unmsm/tree/master/tarea1 "Archivos de la tarea 1"))            
-
 
 
