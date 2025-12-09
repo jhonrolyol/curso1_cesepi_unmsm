@@ -1,0 +1,195 @@
+---
+title: "Porcentaje de población ocupada y desocupada"
+subtitle: "Limpieza de la base de datos"
+author: "Jhon R. Ordoñez"
+format: html
+editor: visual
+---
+
+# 1.- Atajos de teclado
+
+A continuación se muestra una lista de los atajos de teclado necesarios.
+
+-   ctrl + s : save
+-   Ctrl + Alt + i: insertar un nuevo chunk de R.
+-   ctrl + shift + p: show command palette
+-   Alt + shift + k: keyboard shortcuts help
+-   ctrl + shift + m: %\>%
+-   Alt + q : \@
+-   Alt + + : \~
+-   Alt + o : collapse all folds
+-   Alt + shift + o : expand all folds
+-   Theme: base16 Atelier Forest (Darck)
+-   ...
+
+# 2.- Limpiar y establecer el entorno de trabajo
+
+Es necesario realizar una limpieza del entorno de trabajo antes de iniciar un nuevo trabajo.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+  
+  remove(list = ls()) # Limpieza del entorno de trabajo
+  getwd(); dir() # Ruta y archivos disponibles
+  setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # Establece la ruta 
+  options(scipen = 999)  # Sin notación científica
+  options(digits = 2)    # 2 dígitos significativos
+  
+```
+
+# 3.- Instalar paquetes
+
+R es un lenguaje de programación que necesita de paquetes para poder usar determindos función. Por consiguiente, el siguiente paso es fundamental.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+  
+  if (!require("tidyverse")) install.packages("tidyverse") # Conjunto de paquetes para manipulación, transformación, limpieza y visualización de datos (dplyr, ggplot2, tidyr, etc.).
+  if (!require("haven")) install.packages("haven") # Permite importar y exportar datos en formatos de Stata (.dta), SPSS (.sav, .zsav) y SAS (.sas7bdat, .xpt).
+  if (!require("janitor")) install.packages("janitor") # Herramientas para limpiar y estandarizar datos: renombrar variables, limpiar nombres, tablas de frecuencias, manejo de NA, etc.
+  if (!require("labelled")) install.packages("labelled") # Manejo de etiquetas de variables y valores (especialmente útil en encuestas y datos importados de Stata/SPSS).
+  if (!require("summarytools")) install.packages("summarytools") # Genera reportes descriptivos (freq(), descr(), dfSummary()) de forma clara y presentable en HTML, markdown o consola.
+
+  
+```
+
+# 4.- Cargar paquetes
+
+Haber instalado un paquete no es suficiente para que funcione en el entorno de trabjo de R, sino que debemos llamarlo usando el library.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  library(tidyverse)      
+  library(haven)          
+  library(janitor)        
+  library(labelled)       
+  library(summarytools)
+  
+```
+
+# 5.- Integración de base de datos
+
+## 5.1.- Criterios de limpieza y merge de los archivos de datos 2020.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  empleoi_2020 <- as.data.frame(read_sav("4.raw_data/2020_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2020_desc <- look_for(empleoi_2020); View(empleoi_2020_desc)
+  freq(empleoi_2020$ocu500); freq(empleoi_2020$p208a)
+  freq(empleoi_2020$estrato); freq(empleoi_2020$ubigeo)
+  freq(empleoi_2020$p207)
+  save(empleoi_2020, empleoi_2020_desc, file = "6.processed_data/empleoi_2020.RData")
+  remove(list = c("empleoi_2020", "empleoi_2020_desc"))
+  
+```
+
+## 5.2.- Criterios de limpieza y merge de los archivos de datos 2021.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  empleoi_2021 <- as.data.frame(read_sav("4.raw_data/2021_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2021_desc <- look_for(empleoi_2021); View(empleoi_2021_desc)
+  freq(empleoi_2021$ocu500); freq(empleoi_2021$p208a)
+  freq(empleoi_2021$estrato); freq(empleoi_2021$ubigeo)
+  freq(empleoi_2021$p207)
+  save(empleoi_2021, empleoi_2021_desc, file = "6.processed_data/empleoi_2021.RData")
+  remove(list = c("empleoi_2021", "empleoi_2021_desc"))
+  
+```
+
+
+## 5.3.- Criterios de limpieza y merge de los archivos de datos 2022.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  empleoi_2022 <- as.data.frame(read_sav("4.raw_data/2022_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2022_desc <- look_for(empleoi_2022); View(empleoi_2022_desc)
+  freq(empleoi_2022$ocu500); freq(empleoi_2022$p208a)
+  freq(empleoi_2022$estrato); freq(empleoi_2022$ubigeo)
+  freq(empleoi_2022$p207)
+  save(empleoi_2022, empleoi_2022_desc, file = "6.processed_data/empleoi_2022.RData")
+  remove(list = c("empleoi_2022", "empleoi_2022_desc"))
+  
+```
+
+
+## 5.4.- Criterios de limpieza y merge de los archivos de datos 2023.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  empleoi_2023 <- as.data.frame(read_sav("4.raw_data/2023_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2023_desc <- look_for(empleoi_2023); View(empleoi_2023_desc)
+  freq(empleoi_2023$ocu500); freq(empleoi_2023$p208a)
+  freq(empleoi_2023$estrato); freq(empleoi_2023$ubigeo)
+  freq(empleoi_2023$p207)
+  save(empleoi_2023, empleoi_2023_desc, file = "6.processed_data/empleoi_2023.RData")
+  remove(list = c("empleoi_2023", "empleoi_2023_desc"))
+  
+```
+
+## 5.5.- Criterios de limpieza y merge de los archivos de datos 2024.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  empleoi_2024 <- as.data.frame(read_sav("4.raw_data/2024_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2024_desc <- look_for(empleoi_2024); View(empleoi_2024_desc)
+  freq(empleoi_2024$ocu500); freq(empleoi_2024$p208a)
+  freq(empleoi_2024$estrato); freq(empleoi_2024$ubigeo)
+  freq(empleoi_2024$p207)
+  save(empleoi_2024, empleoi_2024_desc, file = "6.processed_data/empleoi_2024.RData")
+  remove(list = c("empleoi_2024", "empleoi_2024_desc"))
+  
+```
+
+
+# 6.- Construcción de las variables de estudio
+
+## 6.1.- Variables de estudio 2020
+## 6.2.- Variables de estudio 2021
+## 6.3.- Variables de estudio 2022
+## 6.4.- Variables de estudio 2023
+## 6.5.- Variables de estudio 2024
+
+
+# 7.- Consolidación de todos los archivos de datos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

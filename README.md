@@ -1,6 +1,7 @@
 
-    Introducción integral al análisis y visualización de datos económicos usando el lenguaje
-	de programación R con diversas bases de datos nacionales (Enaho, Endes, presupuesto MEF, entre otras). 
+    Introducción integral al análisis y visualización de datos económicos
+    usando el lenguaje de programación R con diversas bases de datos 
+	nacionales (Enaho, Endes, presupuesto MEF, entre otras). 
 
 #  Análisis de datos económicos y sociales 
 
@@ -26,15 +27,13 @@
 
 >> Identificar el porcentaje de población ocupada y desocupada según los siguientes estratos:
 
-	- Nacional (año 2024) 
-	- Por rangos de edades (año 2023) 
-	- Área geográfica (urbana y rural) (año 2024)
-	- Región (año 2023)
-	- Región y sexo (año 2024)
+>>> Nacional (año 2024) 
+>>> Por rangos de edades (año 2023) 
+>>> Área geográfica (urbana y rural) (año 2024)
+>>> Región (año 2023)
+>>> Región y sexo (año 2024)
 
 Presentar un gráfico para cada uno de los resultados. 
 
 - :file_folder: Archivos de la tarea 1 (:point_right:[Click aquí](... "Archivos de la clase 4"))            
-
-
 

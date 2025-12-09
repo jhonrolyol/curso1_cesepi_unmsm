@@ -1,0 +1,168 @@
+---
+title: "Porcentaje de población ocupada y desocupada"
+subtitle: "Directorio de trabajo y descarga"
+author: "Jhon R. Ordoñez"
+format: html
+editor: visual
+---
+
+# 1.- Atajos de teclado
+
+A continuación se muestra una lista de los atajos de teclado necesarios.
+
+-   ctrl + s : save
+-   Ctrl + Alt + i: insertar un nuevo chunk de R.
+-   ctrl + shift + p: show command palette
+-   Alt + shift + k: keyboard shortcuts help
+-   ctrl + shift + m: %\>%
+-   Alt + q : \@
+-   Alt + + : \~
+-   Alt + o : collapse all folds
+-   Alt + shift + o : expand all folds
+-   Theme: base16 Atelier Forest (Darck)
+-   ...
+
+# 2.- Limpiar y establecer el entorno de trabajo
+
+Es necesario realizar una limpieza del entorno de trabajo antes de iniciar un nuevo trabajo.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+  
+  remove(list = ls()) # Limpieza del entorno de trabajo
+  getwd(); dir() # Ruta y archivos disponibles
+  setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # Establece la ruta 
+  options(scipen = 999)  # Sin notación científica
+  options(digits = 2)    # 2 dígitos significativos
+  
+```
+
+# 3.- Creación del directorio de trabajo
+
+Esta sección es muy importante para estudios que implican el manejo de mucha información como datos, documentación, pruebas, etc.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  dir.create("1.lecture_notes")        # Apuntes, resúmenes, notas, etc.
+  dir.create("2.lectures")             # Diapositivas, material docente, etc.
+  dir.create("3.problem_sets")         # Problemas, desafíos, prácticas, etc.
+  dir.create("4.raw_data")             # Datos originales sin modificar
+  dir.create("5.docs")                 # Cuestionarios, artículos, etc.
+  dir.create("6.processed_data")       # Datos limpios y procesados.
+  dir.create("7.results")              # Hallazgos principales y reportes.
+  dir.create("7.results/7.1.tables")   # Output tabular, estadísticas
+  dir.create("7.results/7.2.figures")  # Gráficos, diagramas, figuras
+  dir.create("7.results/7.3.maps")     # Mapas, análisis espaciales, etc.
+  dir.create("8.temp")                 # Archivos de prueba, experimentos, etc.
+  
+```
+
+# 4.- Instalar paquetes
+
+R es un lenguaje de programación que necesita de paquetes para poder usar determindos función. Por consiguiente, el siguiente paso es fundamental.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+  
+  if (!require("tidyverse")) install.packages("tidyverse") # Conjunto de paquetes para manipulación, transformación, limpieza y visualización de datos (dplyr, ggplot2, tidyr, etc.).
+  if (!require("haven")) install.packages("haven") # Permite importar y exportar datos en formatos de Stata (.dta), SPSS (.sav, .zsav) y SAS (.sas7bdat, .xpt).
+  if (!require("janitor")) install.packages("janitor") # Herramientas para limpiar y estandarizar datos: renombrar variables, limpiar nombres, tablas de frecuencias, manejo de NA, etc.
+  if (!require("labelled")) install.packages("labelled") # Manejo de etiquetas de variables y valores (especialmente útil en encuestas y datos importados de Stata/SPSS).
+  if (!require("summarytools")) install.packages("summarytools") # Genera reportes descriptivos (freq(), descr(), dfSummary()) de forma clara y presentable en HTML, markdown o consola.
+  
+```
+
+# 5.- Cargar paquetes
+
+Haber instalado un paquete no es suficiente para que funcione en el entorno de trabjo de R, sino que debemos llamarlo usando el library.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  library(tidyverse)      
+  library(haven)          
+  library(janitor)        
+  library(labelled)       
+  library(summarytools)   
+
+
+```
+
+# 6.- Descarga de los archivos de datos
+
+Los archivos de datos a usarse en el presente análisis provienen del Instituto Nacional de Estadística e Informática, en particular la encuesta denominado "Encuesta Nacional de Hogares". Dado que es un poco laborioso la descarga manual de los archivos de datos desde la página web, en esta sección creamos una función que automatize dicha tarea de manera sencilla.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  enahodata <- function(periodo, codigo_modulo, base, guardar = FALSE, ruta = "", codificacion = "latin1") {
+    require(haven);require(stringr);require(utils);temp_file <- tempfile();temp_dir <- tempdir()
+    versiones <- matrix(c(2024,966,2023,906,2022,784,2021,759,2020,737,2019,687,2018,634,2017,603,2016,546,2015,498,
+                          2014,440,2013,404,2012,324,2011,291,2010,279,2009,285,2008,284,2007,283,2006,282,2005,281,
+                          2004,280),byrow = TRUE,ncol = 2)
+    if (!(periodo %in% versiones[, 1])) {
+      stop("El año especificado no está disponible.")
+    }
+    codigo_encuesta <- versiones[versiones[, 1] == periodo, 2]
+    codigo_modulo <- sprintf("%02d", as.integer(codigo_modulo))
+    url <- paste0("https://proyectos.inei.gob.pe/iinei/srienaho/descarga/SPSS/",codigo_encuesta, "-modulo",codigo_modulo, ".zip")
+    tryCatch({
+      download.file(url, temp_file, mode = "wb", quiet = TRUE)
+    }, error = function(e) {
+      stop("Error al descargar: ", e$message)
+    })
+    contenido_zip <- unzip(temp_file, list = TRUE)
+    nombres_limpios <- iconv(contenido_zip$Name, from = "latin1", to = "ASCII//TRANSLIT")
+    archivos <- contenido_zip[grepl(paste0(base, "\\.sav$"), nombres_limpios, ignore.case = TRUE), ]
+    if (nrow(archivos) == 0) {
+      stop("Archivo .sav no encontrado. Archivos disponibles:\n",
+           paste(nombres_limpios, collapse = "\n"))
+    }
+    if (guardar) {
+      if (!dir.exists(ruta)) dir.create(ruta, recursive = TRUE)
+      unzip(temp_file, files = archivos$Name, exdir = ruta)
+      message("Archivo guardado en: ", file.path(ruta, archivos$Name))
+    } else {
+      path_sav <- unzip(temp_file, files = archivos$Name[1], exdir = temp_dir)
+      enaho_df <- read_sav(path_sav, encoding = codificacion)
+      colnames(enaho_df) <- toupper(colnames(enaho_df))
+      return(enaho_df)
+    }
+  }
+  
+```
+
+Una vez creado la función ahora procedemos con la descarga de los archivos de datos de los módulos disponibles.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  years <- 2020:2024
+  for (i in years) {
+    write_sav(clean_names(enahodata(i, 05, paste0("enaho01a-",i,"-500"))), paste0("4.raw_data/", i, "_empleoi.sav"))
+  }
+
+
+  years <- 2023:2024
+  for (i in years) {
+    write_sav(clean_names(enahodata(i, 01, paste0("enaho01-",i,"-100"))),  paste0("4.raw_data/", i, "_cvhogar.sav"))
+    write_sav(clean_names(enahodata(i, 02, paste0("enaho01-",i,"-200"))),  paste0("4.raw_data/", i, "_cmhogar.sav"))
+    write_sav(clean_names(enahodata(i, 05, paste0("enaho01a-",i,"-500"))), paste0("4.raw_data/", i, "_empleoi.sav"))
+    write_sav(clean_names(enahodata(i, 34, paste0("sumaria-", i))),        paste0("4.raw_data/", i, "_sumaria.sav"))
+  }
+  
+  
+```
