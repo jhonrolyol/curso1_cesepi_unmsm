@@ -53,8 +53,9 @@ R es un lenguaje de programación que necesita de paquetes para poder usar deter
   if (!require("janitor")) install.packages("janitor") # Herramientas para limpiar y estandarizar datos: renombrar variables, limpiar nombres, tablas de frecuencias, manejo de NA, etc.
   if (!require("labelled")) install.packages("labelled") # Manejo de etiquetas de variables y valores (especialmente útil en encuestas y datos importados de Stata/SPSS).
   if (!require("summarytools")) install.packages("summarytools") # Genera reportes descriptivos (freq(), descr(), dfSummary()) de forma clara y presentable en HTML, markdown o consola.
- 
-  
+  if (!require("survey")) install.packages("survey") # Paquete para el análisis de datos de encuestas complejas; permite definir diseños muestrales (estratos, conglomerados y pesos) y estimar estadísticas y modelos que sean representativos a nivel poblacional.
+  if (!require("ggplot2")) install.packages("ggplot2") # Paquete para la visualización de datos, permite crear gráficos estadísticos elegantes y personalizables basados en la Gramática de los Gráficos.
+
 ```
 
 # 4.- Cargar paquetes
@@ -71,24 +72,364 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
   library(janitor)        
   library(labelled)       
   library(summarytools)   
-
+  library(survey)
+  library(ggplot2)
   
 ```
 
 # 5.- Construcción de tablas
 
-## 5.1.- Tabla 1
+## 5.1.- Tablas para el año 2020
 
-## 5.2.- Tabla 2
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+  
+  remove(list = ls())
+  load("6.processed_data/data_2020.RData")
+  options(survey.lonely.psu = "certainty")
+  dmuestral <- svydesign( ids = ~ conglome, strata = ~ estrato, weights = ~ fac500a, data = data_2020, nest = TRUE)
+  svyby(~ factor(peao), ~ year, svymean, design = dmuestral, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla1_2020 <- svyby(~ factor(peao), ~ year, svymean, design = dmuestral, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla2_2020 <- svyby(~ factor(peao), ~ rangos_edad, svymean, design = dmuestral, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      rangos_edad = factor(rangos_edad, levels = c(1:5), labels = c("14 a 24 años", "25 a 44 años", "45 a 59 años", "60 a 64 años", "65 años a más")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(rangos_edad, pea_ocupada, pea_desocupada)
+  
+  tabla3_2020 <- svyby(~ factor(peao), ~ urbano, svymean, design = dmuestral, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      urbano = factor(urbano, levels = c(0,1), labels = c("Rural", "Urbano")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(urbano, pea_ocupada, pea_desocupada)
+  
+  tabla4_2020 <- svyby(~ factor(peao), ~ dpto, svymean, design = dmuestral, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, pea_ocupada, pea_desocupada)
+  
+  tabla5_2020 <- svyby(~ factor(peao), ~ sexo + dpto, svymean, design = dmuestral, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( 
+      sexo = factor(sexo, levels = c(0, 1), labels = c("Mujer", "Varón")),
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, sexo, pea_ocupada, pea_desocupada)
+  
+```
+
+## 5.2.- Tablas para el año 2021
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+  
+  remove(list = ls())
+  load("6.processed_data/data_2021.RData")
+  options(survey.lonely.psu = "certainty")
+  dmuestral_2021 <- svydesign( ids = ~ conglome, strata = ~ estrato, weights = ~ fac500a, data = data_2021, nest = TRUE)
+  svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2021, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla1_2021 <- svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2021, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla2_2021 <- svyby(~ factor(peao), ~ rangos_edad, svymean, design = dmuestral_2021, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      rangos_edad = factor(rangos_edad, levels = c(1:5), labels = c("14 a 24 años", "25 a 44 años", "45 a 59 años", "60 a 64 años", "65 años a más")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(rangos_edad, pea_ocupada, pea_desocupada)
+  
+  tabla3_2021 <- svyby(~ factor(peao), ~ urbano, svymean, design = dmuestral_2021, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      urbano = factor(urbano, levels = c(0,1), labels = c("Rural", "Urbano")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(urbano, pea_ocupada, pea_desocupada)
+  
+  tabla4_2021 <- svyby(~ factor(peao), ~ dpto, svymean, design = dmuestral_2021, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, pea_ocupada, pea_desocupada)
+  
+  tabla5_2021 <- svyby(~ factor(peao), ~ sexo + dpto, svymean, design = dmuestral_2021, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( 
+      sexo = factor(sexo, levels = c(0, 1), labels = c("Mujer", "Varón")),
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, sexo, pea_ocupada, pea_desocupada)
+
+```
+
+## 5.3.- Tablas para el año 2022
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  remove(list = ls())
+  load("6.processed_data/data_2022.RData")
+  options(survey.lonely.psu = "certainty")
+  dmuestral_2022 <- svydesign( ids = ~ conglome, strata = ~ estrato, weights = ~ fac500a, data = data_2022, nest = TRUE)
+  svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2022, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla1_2022 <- svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2022, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla2_2022 <- svyby(~ factor(peao), ~ rangos_edad, svymean, design = dmuestral_2022, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      rangos_edad = factor(rangos_edad, levels = c(1:5), labels = c("14 a 24 años", "25 a 44 años", "45 a 59 años", "60 a 64 años", "65 años a más")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(rangos_edad, pea_ocupada, pea_desocupada)
+  
+  tabla3_2022 <- svyby(~ factor(peao), ~ urbano, svymean, design = dmuestral_2022, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      urbano = factor(urbano, levels = c(0,1), labels = c("Rural", "Urbano")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(urbano, pea_ocupada, pea_desocupada)
+  
+  tabla4_2022 <- svyby(~ factor(peao), ~ dpto, svymean, design = dmuestral_2022, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, pea_ocupada, pea_desocupada)
+  
+  tabla5_2022 <- svyby(~ factor(peao), ~ sexo + dpto, svymean, design = dmuestral_2022, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( 
+      sexo = factor(sexo, levels = c(0, 1), labels = c("Mujer", "Varón")),
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, sexo, pea_ocupada, pea_desocupada)
+  
+```
+
+
+## 5.4.- Tablas para el año 2023
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  remove(list = ls())
+  load("6.processed_data/data_2023.RData")
+  options(survey.lonely.psu = "certainty")
+  dmuestral_2023 <- svydesign( ids = ~ conglome, strata = ~ estrato, weights = ~ fac500a, data = data_2023, nest = TRUE)
+  svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2023, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla1_2023 <- svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2023, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla2_2023 <- svyby(~ factor(peao), ~ rangos_edad, svymean, design = dmuestral_2023, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      rangos_edad = factor(rangos_edad, levels = c(1:5), labels = c("14 a 24 años", "25 a 44 años", "45 a 59 años", "60 a 64 años", "65 años a más")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(rangos_edad, pea_ocupada, pea_desocupada)
+  
+  tabla3_2023 <- svyby(~ factor(peao), ~ urbano, svymean, design = dmuestral_2023, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      urbano = factor(urbano, levels = c(0,1), labels = c("Rural", "Urbano")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(urbano, pea_ocupada, pea_desocupada)
+  
+  tabla4_2023 <- svyby(~ factor(peao), ~ dpto, svymean, design = dmuestral_2023, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, pea_ocupada, pea_desocupada)
+  
+  tabla5_2023 <- svyby(~ factor(peao), ~ sexo + dpto, svymean, design = dmuestral_2023, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( 
+      sexo = factor(sexo, levels = c(0, 1), labels = c("Mujer", "Varón")),
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, sexo, pea_ocupada, pea_desocupada)
+  
+```
+
+
+## 5.5.- Tablas para el año 2024
+
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  remove(list = ls())
+  load("6.processed_data/data_2024.RData")
+  options(survey.lonely.psu = "certainty")
+  dmuestral_2024 <- svydesign( ids = ~ conglome, strata = ~ estrato, weights = ~ fac500a, data = data_2023, nest = TRUE)
+  svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2024, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla1_2024 <- svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2024, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+  
+  tabla2_2024 <- svyby(~ factor(peao), ~ rangos_edad, svymean, design = dmuestral_2024, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      rangos_edad = factor(rangos_edad, levels = c(1:5), labels = c("14 a 24 años", "25 a 44 años", "45 a 59 años", "60 a 64 años", "65 años a más")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(rangos_edad, pea_ocupada, pea_desocupada)
+  
+  tabla3_2024 <- svyby(~ factor(peao), ~ urbano, svymean, design = dmuestral_2024, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      urbano = factor(urbano, levels = c(0,1), labels = c("Rural", "Urbano")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(urbano, pea_ocupada, pea_desocupada)
+  
+  tabla4_2024 <- svyby(~ factor(peao), ~ dpto, svymean, design = dmuestral_2024, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate(
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, pea_ocupada, pea_desocupada)
+  
+  tabla5_2024 <- svyby(~ factor(peao), ~ sexo + dpto, svymean, design = dmuestral_2024, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( 
+      sexo = factor(sexo, levels = c(0, 1), labels = c("Mujer", "Varón")),
+      dpto = factor(dpto, levels = 1:25, labels = c( "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho",
+                    "Cajamarca", "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad", "Lambayeque", "Lima",
+                    "Loreto", "Madre de Dios", "Moquegua", "Pasco", "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali")),
+      pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(dpto, sexo, pea_ocupada, pea_desocupada)
+  
+```
+
+
+## 5.6.- Tablas para el año 2020 - 2024
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  remove(list = ls())
+  load("6.processed_data/data_final_2020_2024.RData")
+  
+  
+  
+```
+
+
 
 # 6.- Construcción de figuras
 
-## 6.1.- Figura 1
+## 6.1.- Figuras para el año 2020
+## 6.2.- Figuras para el año 2021
+## 6.3.- Figuras para el año 2022
+## 6.4.- Figuras para el año 2023
+## 6.5.- Figuras para el año 2024
+## 6.6.- Figuras para el año 2020 - 2024
 
-## 6.2.- Figura 2
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  remove(list = ls())
+  load("6.processed_data/data_final_2020_2024.RData")
+  options(survey.lonely.psu = "certainty")
+  dmuestral_2024 <- svydesign( ids = ~ conglome, strata = ~ estrato, weights = ~ fac500a, data = data_final_2020_2024, nest = TRUE)
+  
+  tabla1_2020_2024 <- svyby(~ factor(peao), ~ year, svymean, design = dmuestral_2024, na.rm = TRUE) %>%
+    as.data.frame() %>% mutate( pea_desocupada = round(`factor(peao)0` * 100, 1),
+      pea_ocupada = round(`factor(peao)1` * 100, 1)) %>%
+    select(year, pea_ocupada, pea_desocupada)
+
+  fig1 <- tabla1_2020_2024 %>% pivot_longer(
+    cols = c(pea_ocupada, pea_desocupada),
+    names_to = "estado", values_to = "porcentaje") %>% mutate( 
+      estado = factor(estado, levels = c("pea_ocupada", "pea_desocupada"))) %>%
+    ggplot(aes(x = factor(year), y = porcentaje, fill = estado)) +
+    geom_col() + 
+    geom_text(aes(label = paste0(round(porcentaje, 0), "%")),
+              position = position_stack(vjust = 0.5), color = "white", size = 3.5) + 
+    labs( x = " ", y = "Porcentaje (%)", fill = "", title = "Composición porcentual de la PEA") +
+    scale_fill_manual(
+      values = c( "pea_ocupada"    = "steelblue", "pea_desocupada" = "firebrick"),
+      labels = c("PEA ocupada", "PEA desocupada")) +
+    theme_minimal()
+    
+  ggsave(fig1, filename = "7.results/7.2.figures/fig1.png",w = 7, h = 4.5, dpi = 600)
+  
+  
+```
+
+
 
 # 7.- Construcción de mapas
 
-## 7.1.- Mapa 1
+## 7.1.- Mapas para el año 2020
+## 7.2.- Mapas para el año 2021
+## 7.3.- Mapas para el año 2022
+## 7.4.- Mapas para el año 2023
+## 7.5.- Mapas para el año 2024
+## 7.6.- Mapas para el año 2020 - 2024
 
-## 7.2.- Mapa 2

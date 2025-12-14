@@ -71,7 +71,7 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
   library(janitor)        
   library(labelled)       
   library(summarytools)   
-
+  
   
 ```
 

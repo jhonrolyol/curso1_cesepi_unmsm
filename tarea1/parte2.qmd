@@ -53,7 +53,8 @@ R es un lenguaje de programación que necesita de paquetes para poder usar deter
   if (!require("janitor")) install.packages("janitor") # Herramientas para limpiar y estandarizar datos: renombrar variables, limpiar nombres, tablas de frecuencias, manejo de NA, etc.
   if (!require("labelled")) install.packages("labelled") # Manejo de etiquetas de variables y valores (especialmente útil en encuestas y datos importados de Stata/SPSS).
   if (!require("summarytools")) install.packages("summarytools") # Genera reportes descriptivos (freq(), descr(), dfSummary()) de forma clara y presentable en HTML, markdown o consola.
-
+  if (!require("dplyr")) install.packages("dplyr")  # paquete del tidyverse para manipulación de datos (filtrar, seleccionar, mutar, agrupar, resumir)
+  if (!require("sjlabelled")) install.packages("sjlabelled") # manejo de etiquetas de variables y valores (importación, modificación y conversión de labels)
   
 ```
 
@@ -71,6 +72,8 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
   library(janitor)        
   library(labelled)       
   library(summarytools)
+  library(dplyr)
+  library(sjlabelled)
   
 ```
 
@@ -83,7 +86,7 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
 #| message: false
 #| warning: false
 
-  empleoi_2020 <- as.data.frame(read_sav("4.raw_data/2020_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2020 <- as.data.frame(read_sav("4.raw_data/2020_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "p207", "conglome", "estrato", "fac500a")))
   empleoi_2020_desc <- look_for(empleoi_2020); View(empleoi_2020_desc)
   freq(empleoi_2020$ocu500); freq(empleoi_2020$p208a)
   freq(empleoi_2020$estrato); freq(empleoi_2020$ubigeo)
@@ -100,7 +103,7 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
 #| message: false
 #| warning: false
 
-  empleoi_2021 <- as.data.frame(read_sav("4.raw_data/2021_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2021 <- as.data.frame(read_sav("4.raw_data/2021_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "p207", "conglome", "estrato", "fac500a")))
   empleoi_2021_desc <- look_for(empleoi_2021); View(empleoi_2021_desc)
   freq(empleoi_2021$ocu500); freq(empleoi_2021$p208a)
   freq(empleoi_2021$estrato); freq(empleoi_2021$ubigeo)
@@ -110,7 +113,6 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
   
 ```
 
-
 ## 5.3.- Criterios de limpieza y merge de los archivos de datos 2022.
 
 ```{r}
@@ -118,7 +120,7 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
 #| message: false
 #| warning: false
 
-  empleoi_2022 <- as.data.frame(read_sav("4.raw_data/2022_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2022 <- as.data.frame(read_sav("4.raw_data/2022_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "p207", "conglome", "estrato", "fac500a")))
   empleoi_2022_desc <- look_for(empleoi_2022); View(empleoi_2022_desc)
   freq(empleoi_2022$ocu500); freq(empleoi_2022$p208a)
   freq(empleoi_2022$estrato); freq(empleoi_2022$ubigeo)
@@ -128,7 +130,6 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
   
 ```
 
-
 ## 5.4.- Criterios de limpieza y merge de los archivos de datos 2023.
 
 ```{r}
@@ -136,7 +137,7 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
 #| message: false
 #| warning: false
 
-  empleoi_2023 <- as.data.frame(read_sav("4.raw_data/2023_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2023 <- as.data.frame(read_sav("4.raw_data/2023_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "p207", "conglome", "estrato", "fac500a")))
   empleoi_2023_desc <- look_for(empleoi_2023); View(empleoi_2023_desc)
   freq(empleoi_2023$ocu500); freq(empleoi_2023$p208a)
   freq(empleoi_2023$estrato); freq(empleoi_2023$ubigeo)
@@ -153,7 +154,7 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
 #| message: false
 #| warning: false
 
-  empleoi_2024 <- as.data.frame(read_sav("4.raw_data/2024_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "estrato", "p207", "fac500a")))
+  empleoi_2024 <- as.data.frame(read_sav("4.raw_data/2024_empleoi.sav", col_select = c("ubigeo","ocu500", "p208a", "p207", "conglome", "estrato", "fac500a")))
   empleoi_2024_desc <- look_for(empleoi_2024); View(empleoi_2024_desc)
   freq(empleoi_2024$ocu500); freq(empleoi_2024$p208a)
   freq(empleoi_2024$estrato); freq(empleoi_2024$ubigeo)
@@ -163,21 +164,307 @@ Haber instalado un paquete no es suficiente para que funcione en el entorno de t
   
 ```
 
-
 # 6.- Construcción de las variables de estudio
 
 ## 6.1.- Variables de estudio 2020
+
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  load("6.processed_data/empleoi_2020.RData")
+  View(empleoi_2020); View(empleoi_2020_desc); names(empleoi_2020)
+  freq(empleoi_2020$ubigeo)
+  freq(empleoi_2020$estrato)
+  freq(empleoi_2020$p207)
+  freq(empleoi_2020$p208a)
+  freq(empleoi_2020$ocu500)
+  
+  ei2020 <- empleoi_2020 %>% mutate(
+    year = 2020,
+    year = set_label(year, "Año de registro"),
+    dpto = substr(ubigeo, 1, 2),
+    dpto = labelled(as.numeric(dpto), labels = c("Amazonas" = 1, "Ancash" = 2, "Apurímac" = 3,
+    "Arequipa" = 4, "Ayacucho" = 5, "Cajamarca" = 6, "Callao" = 7, "Cusco" = 8, "Huancavelica" = 9,
+    "Huánuco" = 10, "Ica" = 11, "Junín" = 12, "La Libertad" = 13, "Lambayeque" = 14, "Lima" = 15,
+    "Loreto" = 16, "Madre de Dios" = 17, "Moquegua" = 18, "Pasco" = 19, "Piura" = 20, "Puno" = 21, 
+    "San Martín" = 22, "Tacna" = 23, "Tumbes" = 24, "Ucayali" = 25)),
+    dpto  = set_label(dpto, "Departamento"),
+    urbano = case_when(estrato %in% c(1,2,3,4,5) ~ 1, estrato %in% c(6,7,8) ~ 0),
+    urbano = labelled(urbano, labels = c("Urbano" = 1, "Rural" = 0)),
+    urbano = set_label(urbano, "Urbano | 1: Urbano, 0: Rural"),
+    sexo = case_when(p207 %in% c(1) ~ 1, p207 %in% c(2) ~ 0),
+    sexo = labelled(sexo, labels = c("Varón" = 1, "Mujer" = 0)),
+    sexo = set_label(sexo, "Sexo | 1: Varón, 0: Mujer"),
+    rangos_edad = case_when(p208a %in% c(14:24) ~ 1, p208a %in% c(25:44) ~ 2, p208a %in% c(45:59) ~ 3, p208a %in% c(60:64) ~ 4, p208a > 64 ~ 5),
+    rangos_edad = labelled(rangos_edad, labels = c("14 a 24 años" = 1, "25 a 44 años" = 2, "45 a 59 años" = 3, "60 a 64 años" = 4, "65 años a más" = 5)),
+    rangos_edad = set_label(rangos_edad, "Rangos de edades | 1: 14 a 24 años, ..., 5: 65 años a más"),
+    peao = case_when(ocu500 %in% c(1,2) ~ 1, ocu500 %in% c(3,4) ~ 0),
+    peao = labelled(peao, labels = c("Pea ocupada" = 1, "Pea desocupada" = 0)),
+    peao = set_label(peao, "Población Economicamente Activa | 1: Pea ocupada, 0: Pea desocupada")
+  )
+  
+  freq(ei2020$dpto)
+  freq(ei2020$urbano)
+  freq(ei2020$sexo)
+  freq(ei2020$rangos_edad)
+  freq(ei2020$peao)
+  
+  data_2020 <- ei2020 %>% select(year, dpto, urbano, sexo, rangos_edad, peao, conglome, estrato, fac500a)
+  save(data_2020, file = "6.processed_data/data_2020.RData")
+  remove(list = ls())
+  
+
+  
+```
+
+
 ## 6.2.- Variables de estudio 2021
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  load("6.processed_data/empleoi_2021.RData")
+  View(empleoi_2021); View(empleoi_2021_desc); names(empleoi_2021)
+  freq(empleoi_2021$ubigeo)
+  freq(empleoi_2021$estrato)
+  freq(empleoi_2021$p207)
+  freq(empleoi_2021$p208a)
+  freq(empleoi_2021$ocu500)
+  
+  ei2021 <- empleoi_2021 %>% mutate(
+    year = 2021,
+    year = set_label(year, "Año de registro"),
+    dpto = substr(ubigeo, 1, 2),
+    dpto = labelled(as.numeric(dpto), labels = c("Amazonas" = 1, "Ancash" = 2, "Apurímac" = 3,
+    "Arequipa" = 4, "Ayacucho" = 5, "Cajamarca" = 6, "Callao" = 7, "Cusco" = 8, "Huancavelica" = 9,
+    "Huánuco" = 10, "Ica" = 11, "Junín" = 12, "La Libertad" = 13, "Lambayeque" = 14, "Lima" = 15,
+    "Loreto" = 16, "Madre de Dios" = 17, "Moquegua" = 18, "Pasco" = 19, "Piura" = 20, "Puno" = 21, 
+    "San Martín" = 22, "Tacna" = 23, "Tumbes" = 24, "Ucayali" = 25)),
+    dpto  = set_label(dpto, "Departamento"),
+    urbano = case_when(estrato %in% c(1,2,3,4,5) ~ 1, estrato %in% c(6,7,8) ~ 0),
+    urbano = labelled(urbano, labels = c("Urbano" = 1, "Rural" = 0)),
+    urbano = set_label(urbano, "Urbano | 1: Urbano, 0: Rural"),
+    sexo = case_when(p207 %in% c(1) ~ 1, p207 %in% c(2) ~ 0),
+    sexo = labelled(sexo, labels = c("Varón" = 1, "Mujer" = 0)),
+    sexo = set_label(sexo, "Sexo | 1: Varón, 0: Mujer"),
+    rangos_edad = case_when(p208a %in% c(14:24) ~ 1, p208a %in% c(25:44) ~ 2, p208a %in% c(45:59) ~ 3, p208a %in% c(60:64) ~ 4, p208a > 64 ~ 5),
+    rangos_edad = labelled(rangos_edad, labels = c("14 a 24 años" = 1, "25 a 44 años" = 2, "45 a 59 años" = 3, "60 a 64 años" = 4, "65 años a más" = 5)),
+    rangos_edad = set_label(rangos_edad, "Rangos de edades | 1: 14 a 24 años, ..., 5: 65 años a más"),
+    peao = case_when(ocu500 %in% c(1,2) ~ 1, ocu500 %in% c(3,4) ~ 0),
+    peao = labelled(peao, labels = c("Pea ocupada" = 1, "Pea desocupada" = 0)),
+    peao = set_label(peao, "Población Economicamente Activa | 1: Pea ocupada, 0: Pea desocupada")
+  )
+  
+  freq(ei2021$dpto)
+  freq(ei2021$urbano)
+  freq(ei2021$sexo)
+  freq(ei2021$rangos_edad)
+  freq(ei2021$peao)
+  
+  data_2021 <- ei2021 %>% select(year, dpto, urbano, sexo, rangos_edad, peao, conglome, estrato, fac500a)
+  save(data_2021, file = "6.processed_data/data_2021.RData")
+  remove(list = ls())
+  
+```
+
+
 ## 6.3.- Variables de estudio 2022
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  load("6.processed_data/empleoi_2022.RData")
+  View(empleoi_2022); View(empleoi_2022_desc); names(empleoi_2022)
+  freq(empleoi_2022$ubigeo)
+  freq(empleoi_2022$estrato)
+  freq(empleoi_2022$p207)
+  freq(empleoi_2022$p208a)
+  freq(empleoi_2022$ocu500)
+  
+  ei2022 <- empleoi_2022 %>% mutate(
+    year = 2022,
+    year = set_label(year, "Año de registro"),
+    dpto = substr(ubigeo, 1, 2),
+    dpto = labelled(as.numeric(dpto), labels = c("Amazonas" = 1, "Ancash" = 2, "Apurímac" = 3,
+    "Arequipa" = 4, "Ayacucho" = 5, "Cajamarca" = 6, "Callao" = 7, "Cusco" = 8, "Huancavelica" = 9,
+    "Huánuco" = 10, "Ica" = 11, "Junín" = 12, "La Libertad" = 13, "Lambayeque" = 14, "Lima" = 15,
+    "Loreto" = 16, "Madre de Dios" = 17, "Moquegua" = 18, "Pasco" = 19, "Piura" = 20, "Puno" = 21, 
+    "San Martín" = 22, "Tacna" = 23, "Tumbes" = 24, "Ucayali" = 25)),
+    dpto  = set_label(dpto, "Departamento"),
+    urbano = case_when(estrato %in% c(1,2,3,4,5) ~ 1, estrato %in% c(6,7,8) ~ 0),
+    urbano = labelled(urbano, labels = c("Urbano" = 1, "Rural" = 0)),
+    urbano = set_label(urbano, "Urbano | 1: Urbano, 0: Rural"),
+    sexo = case_when(p207 %in% c(1) ~ 1, p207 %in% c(2) ~ 0),
+    sexo = labelled(sexo, labels = c("Varón" = 1, "Mujer" = 0)),
+    sexo = set_label(sexo, "Sexo | 1: Varón, 0: Mujer"),
+    rangos_edad = case_when(p208a %in% c(14:24) ~ 1, p208a %in% c(25:44) ~ 2, p208a %in% c(45:59) ~ 3, p208a %in% c(60:64) ~ 4, p208a > 64 ~ 5),
+    rangos_edad = labelled(rangos_edad, labels = c("14 a 24 años" = 1, "25 a 44 años" = 2, "45 a 59 años" = 3, "60 a 64 años" = 4, "65 años a más" = 5)),
+    rangos_edad = set_label(rangos_edad, "Rangos de edades | 1: 14 a 24 años, ..., 5: 65 años a más"),
+    peao = case_when(ocu500 %in% c(1,2) ~ 1, ocu500 %in% c(3,4) ~ 0),
+    peao = labelled(peao, labels = c("Pea ocupada" = 1, "Pea desocupada" = 0)),
+    peao = set_label(peao, "Población Economicamente Activa | 1: Pea ocupada, 0: Pea desocupada")
+  )
+  
+  freq(ei2022$dpto)
+  freq(ei2022$urbano)
+  freq(ei2022$sexo)
+  freq(ei2022$rangos_edad)
+  freq(ei2022$peao)
+  
+  data_2022 <- ei2022 %>% select(year, dpto, urbano, sexo, rangos_edad, peao, conglome, estrato, fac500a)
+  save(data_2022, file = "6.processed_data/data_2022.RData")
+  remove(list = ls())
+  
+```
+
+
 ## 6.4.- Variables de estudio 2023
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  load("6.processed_data/empleoi_2023.RData")
+  View(empleoi_2023); View(empleoi_2023_desc); names(empleoi_2023)
+  freq(empleoi_2023$ubigeo)
+  freq(empleoi_2023$estrato)
+  freq(empleoi_2023$p207)
+  freq(empleoi_2023$p208a)
+  freq(empleoi_2023$ocu500)
+  
+  ei2023 <- empleoi_2023 %>% mutate(
+    year = 2023,
+    year = set_label(year, "Año de registro"),
+    dpto = substr(ubigeo, 1, 2),
+    dpto = labelled(as.numeric(dpto), labels = c("Amazonas" = 1, "Ancash" = 2, "Apurímac" = 3,
+    "Arequipa" = 4, "Ayacucho" = 5, "Cajamarca" = 6, "Callao" = 7, "Cusco" = 8, "Huancavelica" = 9,
+    "Huánuco" = 10, "Ica" = 11, "Junín" = 12, "La Libertad" = 13, "Lambayeque" = 14, "Lima" = 15,
+    "Loreto" = 16, "Madre de Dios" = 17, "Moquegua" = 18, "Pasco" = 19, "Piura" = 20, "Puno" = 21, 
+    "San Martín" = 22, "Tacna" = 23, "Tumbes" = 24, "Ucayali" = 25)),
+    dpto  = set_label(dpto, "Departamento"),
+    urbano = case_when(estrato %in% c(1,2,3,4,5) ~ 1, estrato %in% c(6,7,8) ~ 0),
+    urbano = labelled(urbano, labels = c("Urbano" = 1, "Rural" = 0)),
+    urbano = set_label(urbano, "Urbano | 1: Urbano, 0: Rural"),
+    sexo = case_when(p207 %in% c(1) ~ 1, p207 %in% c(2) ~ 0),
+    sexo = labelled(sexo, labels = c("Varón" = 1, "Mujer" = 0)),
+    sexo = set_label(sexo, "Sexo | 1: Varón, 0: Mujer"),
+    rangos_edad = case_when(p208a %in% c(14:24) ~ 1, p208a %in% c(25:44) ~ 2, p208a %in% c(45:59) ~ 3, p208a %in% c(60:64) ~ 4, p208a > 64 ~ 5),
+    rangos_edad = labelled(rangos_edad, labels = c("14 a 24 años" = 1, "25 a 44 años" = 2, "45 a 59 años" = 3, "60 a 64 años" = 4, "65 años a más" = 5)),
+    rangos_edad = set_label(rangos_edad, "Rangos de edades | 1: 14 a 24 años, ..., 5: 65 años a más"),
+    peao = case_when(ocu500 %in% c(1,2) ~ 1, ocu500 %in% c(3,4) ~ 0),
+    peao = labelled(peao, labels = c("Pea ocupada" = 1, "Pea desocupada" = 0)),
+    peao = set_label(peao, "Población Economicamente Activa | 1: Pea ocupada, 0: Pea desocupada")
+  )
+  
+  freq(ei2023$dpto)
+  freq(ei2023$urbano)
+  freq(ei2023$sexo)
+  freq(ei2023$rangos_edad)
+  freq(ei2023$peao)
+  
+  data_2023 <- ei2023 %>% select(year, dpto, urbano, sexo, rangos_edad, peao, conglome, estrato, fac500a)
+  save(data_2023, file = "6.processed_data/data_2023.RData")
+  remove(list = ls())
+  
+```
+
+
+
 ## 6.5.- Variables de estudio 2024
+
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  load("6.processed_data/empleoi_2024.RData")
+  View(empleoi_2024); View(empleoi_2024_desc); names(empleoi_2024)
+  freq(empleoi_2024$ubigeo)
+  freq(empleoi_2024$estrato)
+  freq(empleoi_2024$p207)
+  freq(empleoi_2024$p208a)
+  freq(empleoi_2024$ocu500)
+  
+  ei2024 <- empleoi_2024 %>% mutate(
+    year = 2024,
+    year = set_label(year, "Año de registro"),
+    dpto = substr(ubigeo, 1, 2),
+    dpto = labelled(as.numeric(dpto), labels = c("Amazonas" = 1, "Ancash" = 2, "Apurímac" = 3,
+    "Arequipa" = 4, "Ayacucho" = 5, "Cajamarca" = 6, "Callao" = 7, "Cusco" = 8, "Huancavelica" = 9,
+    "Huánuco" = 10, "Ica" = 11, "Junín" = 12, "La Libertad" = 13, "Lambayeque" = 14, "Lima" = 15,
+    "Loreto" = 16, "Madre de Dios" = 17, "Moquegua" = 18, "Pasco" = 19, "Piura" = 20, "Puno" = 21, 
+    "San Martín" = 22, "Tacna" = 23, "Tumbes" = 24, "Ucayali" = 25)),
+    dpto  = set_label(dpto, "Departamento"),
+    urbano = case_when(estrato %in% c(1,2,3,4,5) ~ 1, estrato %in% c(6,7,8) ~ 0),
+    urbano = labelled(urbano, labels = c("Urbano" = 1, "Rural" = 0)),
+    urbano = set_label(urbano, "Urbano | 1: Urbano, 0: Rural"),
+    sexo = case_when(p207 %in% c(1) ~ 1, p207 %in% c(2) ~ 0),
+    sexo = labelled(sexo, labels = c("Varón" = 1, "Mujer" = 0)),
+    sexo = set_label(sexo, "Sexo | 1: Varón, 0: Mujer"),
+    rangos_edad = case_when(p208a %in% c(14:24) ~ 1, p208a %in% c(25:44) ~ 2, p208a %in% c(45:59) ~ 3, p208a %in% c(60:64) ~ 4, p208a > 64 ~ 5),
+    rangos_edad = labelled(rangos_edad, labels = c("14 a 24 años" = 1, "25 a 44 años" = 2, "45 a 59 años" = 3, "60 a 64 años" = 4, "65 años a más" = 5)),
+    rangos_edad = set_label(rangos_edad, "Rangos de edades | 1: 14 a 24 años, ..., 5: 65 años a más"),
+    peao = case_when(ocu500 %in% c(1,2) ~ 1, ocu500 %in% c(3,4) ~ 0),
+    peao = labelled(peao, labels = c("Pea ocupada" = 1, "Pea desocupada" = 0)),
+    peao = set_label(peao, "Población Economicamente Activa | 1: Pea ocupada, 0: Pea desocupada")
+  )
+  
+  freq(ei2024$dpto)
+  freq(ei2024$urbano)
+  freq(ei2024$sexo)
+  freq(ei2024$rangos_edad)
+  freq(ei2024$peao)
+  
+  data_2024 <- ei2024 %>% select(year, dpto, urbano, sexo, rangos_edad, peao, conglome, estrato, fac500a)
+  save(data_2024, file = "6.processed_data/data_2024.RData")
+  remove(list = ls())
+  
+```
+
 
 
 # 7.- Consolidación de todos los archivos de datos
 
 
+## 7.1.- Revisión de los archivos de datos integrados por año
 
 
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  load("6.processed_data/data_2020.RData")
+  load("6.processed_data/data_2021.RData")
+  load("6.processed_data/data_2022.RData")
+  load("6.processed_data/data_2023.RData")
+  load("6.processed_data/data_2024.RData")
+  
+```
+
+## 7.2.- Concatenación de archivos de datos por años y guardar la base final
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+  data_final_2020_2024 <- bind_rows(data_2020, data_2021, data_2022, data_2023, data_2024)
+  data_final_2020_2024_desc <- look_for(data_final_2020_2024)
+  save(data_final_2020_2024, data_final_2020_2024_desc, file = "6.processed_data/data_final_2020_2024.RData")
+  write_dta(data_final_2020_2024, "6.processed_data/data_final_2020_2024.dta")
+  remove(list = ls())
+
+```
 
 
 
